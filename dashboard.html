@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KEY ROTATOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* White base, black structure, two contrasting accents: BLUE + RED */
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel-alt: #f3f3f3;
+    --ink: #0a0a0a;
+    --muted: #5c5c5c;
+    --faint: #8a8a8a;
+    --line: #0a0a0a;          /* hard black borders */
+    --line-soft: #d6d6d6;
+
+    --blue: #1438e6;          /* contrast color 1 */
+    --blue-bg: #e6ebff;
+    --red: #e21000;           /* contrast color 2 */
+    --red-bg: #ffe5e2;
+    --green: #0a8a2a;         /* functional OK */
+    --green-bg: #e1f6e6;
+    --amber: #b26a00;
+    --amber-bg: #fff1d6;
+
+    --shadow: 4px 4px 0 var(--ink);
+    --shadow-sm: 3px 3px 0 var(--ink);
+    --shadow-press: 2px 2px 0 var(--ink);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    /* subtle grid to keep the wide white space from feeling empty */
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 1760px;
+    margin: 0 auto;
+    padding: 22px 28px 60px;
+  }
+
+  /* generic boxy surface */
+  .box {
+    background: var(--panel);
+    border: 2px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: var(--ink);
+    color: #fff;
+    border: 2px solid var(--line);
+    box-shadow: var(--shadow);
+    margin-bottom: 26px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--blue); color: #fff;
+    font-size: 20px; font-weight: 900;
+    border: 2px solid #fff;
+  }
+  .header-title {
+    font-size: 24px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .header-meta { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+  .meta-item {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 2px 16px;
+    border-left: 1px solid #444;
+  }
+  .meta-label { color: #9aa0aa; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .meta-value { color: #fff; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .status-line { display: flex; align-items: center; gap: 8px; }
+  .status-dot {
+    width: 12px; height: 12px; background: var(--green); border: 2px solid #fff;
+  }
+  .status-dot.offline { background: var(--red); animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* ── Summary Cards ── */
+  .cards-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+    margin-bottom: 30px;
+  }
+  .summary-card {
+    background: var(--panel);
+    border: 2px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    position: relative;
+  }
+  .summary-card .card-label {
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 800;
+  }
+  .summary-card .card-value {
+    font-size: 38px; font-weight: 900; letter-spacing: -1px;
+    font-family: 'JetBrains Mono', monospace; line-height: 1;
+  }
+  .summary-card .card-sub { font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; }
+  .card-accent { position: absolute; top: 0; left: 0; width: 8px; height: 100%; }
+  .acc-blue { background: var(--blue); }
+  .acc-red { background: var(--red); }
+  .acc-black { background: var(--ink); }
+  .acc-green { background: var(--green); }
+  .v-blue { color: var(--blue); }
+  .v-red { color: var(--red); }
+  .v-green { color: var(--green); }
+
+  .sparkline { display: flex; align-items: flex-end; gap: 2px; height: 30px; margin-top: 10px; }
+  .sparkline-bar { flex: 1; background: var(--blue); min-height: 3px; }
+
+  /* ── Section Headers ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 34px 0 16px; cursor: pointer; user-select: none;
+    background: var(--ink); color: #fff;
+    border: 2px solid var(--line); box-shadow: var(--shadow-sm);
+    padding: 11px 18px;
+  }
+  .section-title {
+    font-size: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-badge {
+    background: var(--blue); color: #fff; font-size: 12px; font-weight: 800;
+    padding: 2px 10px; border: 1px solid #fff; font-family: 'JetBrains Mono', monospace;
+  }
+  .section-toggle { font-size: 14px; color: #fff; font-weight: 900; transition: transform 0.15s; }
+  .section-toggle.collapsed { transform: rotate(-90deg); }
+  .section-body { overflow: hidden; }
+  .section-body.hidden { display: none; }
+
+  /* ── Key Cards ── */
+  .key-card {
+    background: var(--panel);
+    border: 2px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .key-card.disabled { opacity: 0.5; }
+  .key-card.rl { border-color: var(--red); box-shadow: 4px 4px 0 var(--red); }
+
+  .key-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
+    border-bottom: 2px solid var(--line); padding-bottom: 14px;
+  }
+  .key-info { display: flex; align-items: center; gap: 12px; }
+  .key-number {
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+    background: var(--blue); color: #fff; font-weight: 900; font-size: 16px;
+    border: 2px solid var(--line); font-family: 'JetBrains Mono', monospace;
+  }
+  .key-label { font-weight: 800; font-size: 15px; }
+  .key-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .key-preview, .provider-chip, .url-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 2px 7px; border: 1px solid var(--line); background: var(--panel-alt); color: var(--muted);
+  }
+  .provider-chip { background: var(--blue-bg); color: var(--blue); border-color: var(--blue); font-weight: 700; }
+  .url-chip { background: #fff; }
+
+  .key-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* Boxy toggle */
+  .toggle { position: relative; width: 52px; height: 26px; cursor: pointer; }
+  .toggle input { display: none; }
+  .toggle-track { position: absolute; inset: 0; background: #cfcfcf; border: 2px solid var(--line); transition: 0.12s; }
+  .toggle input:checked + .toggle-track { background: var(--green); }
+  .toggle-knob {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    background: #fff; border: 2px solid var(--line); transition: 0.12s;
+  }
+  .toggle input:checked ~ .toggle-knob { left: 28px; }
+
+  /* Stats grid */
+  .key-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; margin-bottom: 14px;
+  }
+  .stat-item { background: var(--panel-alt); border: 2px solid var(--line); padding: 10px 12px; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 800; }
+  .stat-value { font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .stat-sub { font-size: 10px; color: var(--faint); margin-top: 3px; font-weight: 600; }
+
+  .progress-bar { height: 6px; background: #e2e2e2; border: 1px solid var(--line); margin-top: 6px; }
+  .progress-fill { height: 100%; background: var(--blue); }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800;
+    padding: 4px 9px; border: 2px solid var(--line); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-ok { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+  .badge-error { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+  .badge-warn { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+
+  /* Controls row */
+  .key-controls {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding-top: 14px; border-top: 2px solid var(--line);
+  }
+  .control-group { display: flex; align-items: center; gap: 7px; }
+  .control-label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  input[type="range"] { -webkit-appearance: none; width: 96px; height: 6px; background: #d8d8d8; border: 1px solid var(--line); outline: none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--blue); border: 2px solid var(--line); cursor: pointer; }
+
+  input[type="number"], input[type="text"], input[type="password"], select {
+    background: #fff; border: 2px solid var(--line); color: var(--ink);
+    font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; width: 100%;
+  }
+  input:focus, select:focus { box-shadow: var(--shadow-press); }
+  input[type="number"] { width: 78px; }
+  select { cursor: pointer; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+    border: 2px solid var(--line); background: #fff; color: var(--ink);
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 800;
+    cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+    box-shadow: var(--shadow-press); transition: transform 0.05s, box-shadow 0.05s;
+  }
+  .btn:hover { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn:active { transform: translate(2px,2px); box-shadow: none; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-ghost { background: #fff; }
+  .btn-sm { padding: 6px 10px; font-size: 11px; }
+
+  /* Add Key form */
+  .add-form { background: var(--panel); border: 2px solid var(--line); box-shadow: var(--shadow); padding: 20px; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 11px; color: var(--ink); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-weight: 800; }
+  .form-group .hint { font-size: 10px; color: var(--faint); font-weight: 600; text-transform: none; letter-spacing: 0; margin-top: 4px; }
+  .key-input-wrap { position: relative; }
+  .key-input-wrap .toggle-vis { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px; }
+  .form-divider { grid-column: 1/-1; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-top: 2px dashed var(--line-soft); padding-top: 12px; margin-top: 4px; }
+
+  /* Per-key error log */
+  .err-log { margin-top: 14px; border: 2px solid var(--red); background: var(--red-bg); }
+  .err-log-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--red); color: #fff; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+  .err-log-body { max-height: 220px; overflow-y: auto; }
+  .err-row { display: grid; grid-template-columns: 90px 54px 1fr; gap: 10px; padding: 7px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; border-bottom: 1px solid rgba(226,16,0,0.25); align-items: start; }
+  .err-row .et { color: var(--muted); }
+  .err-row .ec { font-weight: 800; color: var(--red); }
+  .err-row .em { color: var(--ink); word-break: break-word; }
+  .err-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 12px; font-weight: 600; }
+
+  /* Request Log */
+  .log-container { background: var(--panel); border: 2px solid var(--line); box-shadow: var(--shadow); }
+  .log-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 2px solid var(--line); flex-wrap: wrap; }
+  .log-entries { max-height: 380px; overflow-y: auto; }
+  .log-entry {
+    display: grid; grid-template-columns: 100px 50px 1fr 150px 56px 64px 70px; gap: 10px;
+    padding: 8px 16px; font-size: 12px; font-family: 'JetBrains Mono', monospace;
+    border-bottom: 1px solid var(--line-soft); align-items: center;
+  }
+  .log-entry:hover { background: var(--panel-alt); }
+  .log-time { color: var(--muted); }
+  .log-method { font-weight: 800; color: var(--blue); }
+  .log-path { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log-key { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log-status { font-weight: 800; text-align: center; padding: 2px 6px; border: 1px solid var(--line); }
+  .log-status.s2xx { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+  .log-status.s4xx { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+  .log-status.s5xx { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+  .log-time-ms { color: var(--muted); text-align: right; }
+  .log-cost { color: var(--amber); text-align: right; font-weight: 700; }
+  .log-empty { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; }
+
+  /* Cost section */
+  .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .cost-card { background: var(--panel); border: 2px solid var(--line); box-shadow: var(--shadow); padding: 18px; }
+  .cost-card .card-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; font-weight: 800; }
+  .cost-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .cost-bar-label { font-size: 12px; width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .cost-bar-track { flex: 1; height: 12px; background: #e6e6e6; border: 2px solid var(--line); }
+  .cost-bar-fill { height: 100%; }
+  .cost-bar-val { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--amber); width: 72px; text-align: right; font-weight: 700; }
+
+  /* Settings */
+  .settings-card { background: var(--panel); border: 2px solid var(--line); box-shadow: var(--shadow); padding: 20px; }
+  .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 18px; }
+
+  /* Toast */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+  .toast { padding: 12px 18px; border: 2px solid var(--line); box-shadow: var(--shadow); font-size: 13px; font-weight: 700; background: #fff; max-width: 380px; }
+  .toast-success { border-color: var(--green); color: var(--green); }
+  .toast-error { border-color: var(--red); color: var(--red); }
+
+  /* Confirm dialog */
+  .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9998; display: flex; align-items: center; justify-content: center; }
+  .confirm-box { background: #fff; border: 2px solid var(--line); box-shadow: var(--shadow); padding: 26px; max-width: 420px; text-align: center; }
+  .confirm-box h3 { margin-bottom: 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .confirm-box p { color: var(--muted); font-size: 13px; margin-bottom: 22px; font-weight: 600; }
+  .confirm-actions { display: flex; gap: 12px; justify-content: center; }
+
+  @media (max-width: 820px) {
+    .app { padding: 14px; }
+    .log-entry { grid-template-columns: 80px 44px 1fr 54px; }
+    .log-key, .log-time-ms, .log-cost { display: none; }
+    .header-meta { width: 100%; }
+    .meta-item { border-left: none; padding-left: 0; }
+  }
+
+  .weight-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; color: var(--blue); min-width: 18px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <span class="logo">K</span>
+      <span class="header-title">Key Rotator</span>
+    </div>
+    <div class="header-meta">
+      <div class="meta-item">
+        <span class="meta-label">Status</span>
+        <span class="status-line"><span class="status-dot" id="statusDot"></span><span class="meta-value" id="connStatus">…</span></span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Uptime</span>
+        <span class="meta-value" id="uptime">-</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Default Target</span>
+        <span class="meta-value" id="targetApi">-</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Strategy</span>
+        <span class="meta-value" id="strategyLabel">-</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Summary Cards -->
+  <div class="cards-row">
+    <div class="summary-card">
+      <div class="card-accent acc-black"></div>
+      <div class="card-label">Total Requests</div>
+      <div class="card-value" id="totalReqs">0</div>
+      <div class="sparkline" id="sparkline"></div>
+    </div>
+    <div class="summary-card">
+      <div class="card-accent acc-green"></div>
+      <div class="card-label">Active Keys</div>
+      <div class="card-value v-green" id="activeKeys">0 / 0</div>
+      <div class="card-sub" id="keysDetail">-</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-accent acc-blue"></div>
+      <div class="card-label">Requests / Min</div>
+      <div class="card-value v-blue" id="rpm">0</div>
+      <div class="card-sub">Calculated over last 60s</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-accent acc-red"></div>
+      <div class="card-label">Total Cost</div>
+      <div class="card-value v-red" id="totalCost">$0.00</div>
+      <div class="card-sub" id="totalTokens">0 tokens</div>
+    </div>
+  </div>
+
+  <!-- Keys Section -->
+  <div class="section-header" onclick="toggleSection('keysSection')">
+    <div class="section-title">🗝 API Keys <span class="section-badge" id="keyCount">0</span></div>
+    <span class="section-toggle" id="keysSectionToggle">▼</span>
+  </div>
+  <div class="section-body" id="keysSection">
+    <div id="keysList"></div>
+
+    <!-- Add Key Form -->
+    <div class="section-header" onclick="toggleSection('addFormInner')" style="margin-top:8px">
+      <div class="section-title">➕ Add New Key / Provider</div>
+      <span class="section-toggle collapsed" id="addFormInnerToggle">▼</span>
+    </div>
+    <div class="section-body hidden" id="addFormInner">
+      <div class="add-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Label / Email</label>
+            <input type="text" id="newLabel" placeholder="e.g. user@email.com">
+          </div>
+          <div class="form-group">
+            <label>API Key</label>
+            <div class="key-input-wrap">
+              <input type="password" id="newKey" placeholder="aero_live_... / sk-...">
+              <button class="toggle-vis" onclick="toggleKeyVis()" title="Show/Hide">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>API URL <span style="color:var(--blue)">(provider base URL)</span></label>
+            <input type="text" id="newBaseUrl" placeholder="https://capi.aerolink.lat">
+            <div class="hint">Leave blank to use the default target. Set this to mix providers.</div>
+          </div>
+          <div class="form-group">
+            <label>Provider Name</label>
+            <input type="text" id="newProvider" placeholder="e.g. Aerolink, OpenRouter">
+          </div>
+          <div class="form-divider">Optional</div>
+          <div class="form-group">
+            <label>Balance Check URL</label>
+            <input type="text" id="newBalanceUrl" placeholder="https://provider/v1/balance">
+            <div class="hint">If the provider exposes a balance endpoint, paste it to enable balance checks.</div>
+          </div>
+          <div class="form-group">
+            <label>Weight (1-10)</label>
+            <input type="number" id="newWeight" value="1" min="1" max="10">
+          </div>
+          <div class="form-group">
+            <label>Budget ($)</label>
+            <input type="number" id="newBudgetAmount" placeholder="10" step="0.5">
+          </div>
+          <div class="form-group">
+            <label>Budget Window</label>
+            <select id="newBudgetHours">
+              <option value="">No budget</option>
+              <option value="1">1 hour</option>
+              <option value="3">3 hours</option>
+              <option value="5" selected>5 hours</option>
+              <option value="12">12 hours</option>
+              <option value="24">24 hours</option>
+              <option value="168">1 week</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Default Cooldown (s)</label>
+            <input type="number" id="newCooldown" placeholder="60" min="0">
+            <div class="hint">Cooldown applied when rate-limited without a Retry-After.</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addKey()">➕ Add Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Log -->
+  <div class="section-header" onclick="toggleSection('logSection')">
+    <div class="section-title">📜 Request Log <span class="section-badge" id="logCount">0</span></div>
+    <span class="section-toggle" id="logSectionToggle">▼</span>
+  </div>
+  <div class="section-body" id="logSection">
+    <div class="log-container">
+      <div class="log-toolbar">
+        <select id="logKeyFilter" onchange="fetchLogs()" style="width:220px">
+          <option value="">All Keys</option>
+        </select>
+        <span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" onclick="fetchLogs()">🔄 Refresh</button>
+      </div>
+      <div class="log-entries" id="logEntries">
+        <div class="log-empty">No requests logged yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost Tracking -->
+  <div class="section-header" onclick="toggleSection('costSection')">
+    <div class="section-title">💰 Cost Breakdown</div>
+    <span class="section-toggle" id="costSectionToggle">▼</span>
+  </div>
+  <div class="section-body" id="costSection">
+    <div class="cost-grid" id="costGrid"></div>
+  </div>
+
+  <!-- Settings -->
+  <div class="section-header" onclick="toggleSection('settingsSection')">
+    <div class="section-title">⚙ Settings</div>
+    <span class="section-toggle collapsed" id="settingsSectionToggle">▼</span>
+  </div>
+  <div class="section-body hidden" id="settingsSection">
+    <div class="settings-card">
+      <div class="settings-grid">
+        <div class="form-group">
+          <label>Default Target API Host</label>
+          <input type="text" id="settingsHost" placeholder="capi.aerolink.lat">
+          <div class="hint">Used by keys that have no per-key API URL.</div>
+        </div>
+        <div class="form-group">
+          <label>Rotation Strategy</label>
+          <select id="settingsStrategy">
+            <option value="round-robin">Round-Robin</option>
+            <option value="weighted-round-robin">Weighted Round-Robin</option>
+            <option value="least-used">Least Used</option>
+            <option value="random">Random</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save & Apply</button>
+        <button class="btn btn-ghost" onclick="hotReload()">🔄 Hot Reload Config</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API = '';
+let lastData = null;
+let sparkData = [];
+let rpmHistory = [];
+const openErrLogs = new Set();   // keys whose error log is expanded
+
+// ── Toast ──
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 250); }, 3200);
+}
+
+// ── Confirm ──
+function confirmBox(msg) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+      <div class="confirm-box">
+        <h3>⚠ Confirm</h3>
+        <p>${msg}</p>
+        <div class="confirm-actions">
+          <button class="btn btn-ghost" id="cfmNo">Cancel</button>
+          <button class="btn btn-danger" id="cfmYes">Delete</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#cfmYes').onclick = () => { overlay.remove(); resolve(true); };
+    overlay.querySelector('#cfmNo').onclick = () => { overlay.remove(); resolve(false); };
+  });
+}
+
+// ── Section toggle ──
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  const tgl = document.getElementById(id + 'Toggle');
+  el.classList.toggle('hidden');
+  if (tgl) tgl.classList.toggle('collapsed', el.classList.contains('hidden'));
+}
+
+// ── API helper ──
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  return res.json();
+}
+
+function timeAgo(iso) {
+  if (!iso) return 'never';
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 5) return 'just now';
+  if (diff < 60) return Math.floor(diff) + 's ago';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ── Sparkline ──
+function updateSparkline(totalReqs) {
+  sparkData.push(totalReqs);
+  if (sparkData.length > 20) sparkData = sparkData.slice(-20);
+  const diffs = [];
+  for (let i = 1; i < sparkData.length; i++) diffs.push(sparkData[i] - sparkData[i - 1]);
+  const max = Math.max(...diffs, 1);
+  const container = document.getElementById('sparkline');
+  container.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'sparkline-bar';
+    const val = diffs[i] || 0;
+    bar.style.height = Math.max(3, (val / max) * 30) + 'px';
+    container.appendChild(bar);
+  }
+}
+
+function calcRPM(total) {
+  const now = Date.now();
+  rpmHistory.push({ t: now, v: total });
+  rpmHistory = rpmHistory.filter(e => now - e.t < 60000);
+  if (rpmHistory.length < 2) return 0;
+  return rpmHistory[rpmHistory.length - 1].v - rpmHistory[0].v;
+}
+
+// Sharp palette for per-key accents — black / blue / red / green only (no purple)
+const keyColors = ['#1438e6', '#e21000', '#0a8a2a', '#0a0a0a'];
+
+// ── Render Keys ──
+function renderKeys(keys) {
+  const container = document.getElementById('keysList');
+  const totalReqs = keys.reduce((s, k) => s + k.totalRequests, 0) || 1;
+
+  container.innerHTML = keys.map((k, i) => {
+    const pct = ((k.totalRequests / totalReqs) * 100).toFixed(1);
+    const color = keyColors[i % keyColors.length];
+    const isRL = k.rateLimitedRemaining > 0;
+    const budgetPct = k.budget ? ((k.budget.used / k.budget.amount) * 100).toFixed(0) : null;
+
+    // status badge
+    let statusBadge;
+    if (isRL) {
+      statusBadge = `<span class="badge badge-error">⏳ Cooldown ${k.rateLimitedRemaining}s${k.rateLimitedReason ? ' · ' + esc(k.rateLimitedReason) : ''}</span>`;
+    } else if (k.totalErrors > 0) {
+      statusBadge = `<span class="badge badge-ok">✓ OK</span>`;
+    } else {
+      statusBadge = `<span class="badge badge-ok">✓ OK</span>`;
+    }
+
+    // balance display
+    let balanceVal;
+    if (k.balance != null) balanceVal = `<span class="v-green">${k.balance}</span>`;
+    else if (k.balanceError) balanceVal = `<span class="v-red" style="font-size:12px" title="${esc(k.balanceError)}">N/A</span>`;
+    else balanceVal = `<span style="color:var(--faint)">—</span>`;
+
+    // error log panel
+    const errOpen = openErrLogs.has(i);
+    const errLog = k.errorLog || [];
+    const errPanel = errOpen ? `
+      <div class="err-log">
+        <div class="err-log-head">
+          <span>⚠ Error Log — ${esc(k.label)} (${errLog.length})</span>
+          <button class="btn btn-sm btn-ghost" style="box-shadow:none;background:#fff;padding:3px 8px" onclick="clearErrors(${i})">Clear</button>
+        </div>
+        <div class="err-log-body">
+          ${errLog.length === 0
+            ? '<div class="err-empty">No errors recorded for this key. 🎉</div>'
+            : errLog.map(e => `<div class="err-row">
+                <span class="et">${new Date(e.timestamp).toLocaleTimeString()}</span>
+                <span class="ec">${e.statusCode}</span>
+                <span class="em">${esc(e.message)}</span>
+              </div>`).join('')}
+        </div>
+      </div>` : '';
+
+    return `
+    <div class="key-card ${k.enabled ? '' : 'disabled'} ${isRL ? 'rl' : ''}">
+      <div class="key-header">
+        <div class="key-info">
+          <div class="key-number" style="background:${color}">${i + 1}</div>
+          <div>
+            <div class="key-label">${esc(k.label)}</div>
+            <div class="key-sub">
+              <span class="key-preview">${esc(k.keyPreview)}</span>
+              ${k.provider ? `<span class="provider-chip">${esc(k.provider)}</span>` : ''}
+              <span class="url-chip" title="Upstream for this key">${esc(k.effectiveUrl)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="key-actions">
+          ${statusBadge}
+          <label class="toggle" title="${k.enabled ? 'Disable' : 'Enable'}">
+            <input type="checkbox" ${k.enabled ? 'checked' : ''} onchange="toggleKey(${i})">
+            <div class="toggle-track"></div>
+            <div class="toggle-knob"></div>
+          </label>
+          <button class="btn btn-danger btn-sm" onclick="deleteKey(${i})" title="Remove key">🗑</button>
+        </div>
+      </div>
+
+      <div class="key-stats">
+        <div class="stat-item">
+          <div class="stat-label">Requests</div>
+          <div class="stat-value" style="color:${color}">${k.totalRequests.toLocaleString()}</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+          <div class="stat-sub">${pct}% of total</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Errors</div>
+          <div class="stat-value" style="color:${k.totalErrors > 0 ? 'var(--red)' : 'var(--green)'}">${k.totalErrors}</div>
+          <div class="stat-sub">${(k.errorLog || []).length} logged</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Last Used</div>
+          <div class="stat-value" style="font-size:14px">${timeAgo(k.lastUsed)}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Cost</div>
+          <div class="stat-value" style="color:var(--amber)">$${k.cost.totalCost.toFixed(4)}</div>
+          <div class="stat-sub">In ${(k.cost.inputTokens/1000).toFixed(1)}k · Out ${(k.cost.outputTokens/1000).toFixed(1)}k</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Balance</div>
+          <div class="stat-value" style="font-size:16px">${balanceVal}</div>
+          <div class="stat-sub">${k.balanceCheckedAt ? 'checked ' + timeAgo(k.balanceCheckedAt) : (k.balanceUrl ? 'not checked' : 'no URL set')}</div>
+        </div>
+        ${k.budget ? `
+        <div class="stat-item">
+          <div class="stat-label">Budget</div>
+          <div class="stat-value" style="font-size:15px;color:${parseFloat(budgetPct) > 80 ? 'var(--red)' : 'var(--green)'}">$${k.budget.used.toFixed(2)}/$${k.budget.amount}</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, budgetPct)}%;background:${parseFloat(budgetPct) > 80 ? 'var(--red)' : 'var(--green)'}"></div></div>
+          <div class="stat-sub">${k.budget.hours}h window</div>
+        </div>` : ''}
+      </div>
+
+      <div class="key-controls">
+        <div class="control-group">
+          <span class="control-label">Weight</span>
+          <input type="range" min="1" max="10" value="${k.weight}" oninput="this.nextElementSibling.textContent=this.value" onchange="setWeight(${i}, this.value)">
+          <span class="weight-val">${k.weight}</span>
+        </div>
+        <div class="control-group">
+          <span class="control-label">Budget $</span>
+          <input type="number" value="${k.budget ? k.budget.amount : ''}" placeholder="—" style="width:66px" id="budget-amt-${i}">
+          <span class="control-label">Hrs</span>
+          <input type="number" value="${k.budget ? k.budget.hours : ''}" placeholder="—" style="width:56px" id="budget-hrs-${i}">
+          <button class="btn btn-ghost btn-sm" onclick="setBudget(${i})">Set</button>
+        </div>
+        <div class="control-group">
+          <span class="control-label">Cooldown s</span>
+          <input type="number" value="${k.cooldownSeconds || ''}" placeholder="${k.rateLimitedRemaining || 60}" style="width:64px" id="cooldown-${i}">
+          <button class="btn btn-ghost btn-sm" onclick="setCooldown(${i})">Apply</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearCooldown(${i})">Clear</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="checkBalance(${i})">💵 Check Balance</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleErrLog(${i})">${errOpen ? '▲ Hide' : '▼ View'} Errors (${(k.errorLog||[]).length})</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterLogsToKey(${i})">🔎 Logs</button>
+        <button class="btn btn-ghost btn-sm" onclick="editProvider(${i})">✎ Provider/URL</button>
+      </div>
+      ${errPanel}
+    </div>`;
+  }).join('');
+}
+
+// ── Cost breakdown ──
+function renderCosts(keys) {
+  const grid = document.getElementById('costGrid');
+  const maxCost = Math.max(...keys.map(k => k.cost.totalCost), 0.001);
+  const totalCost = keys.reduce((s, k) => s + k.cost.totalCost, 0);
+  const totalIn = keys.reduce((s, k) => s + k.cost.inputTokens, 0);
+  const totalOut = keys.reduce((s, k) => s + k.cost.outputTokens, 0);
+
+  grid.innerHTML = `
+    <div class="cost-card">
+      <div class="card-label">Cost per Key</div>
+      ${keys.map((k, i) => {
+        const pct = (k.cost.totalCost / maxCost) * 100;
+        const color = keyColors[i % keyColors.length];
+        return `<div class="cost-bar-row">
+          <span class="cost-bar-label">${esc(k.label)}</span>
+          <div class="cost-bar-track"><div class="cost-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          <span class="cost-bar-val">$${k.cost.totalCost.toFixed(4)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="cost-card">
+      <div class="card-label">Token Usage</div>
+      ${keys.map((k) => `<div style="margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:4px">${esc(k.label)}</div>
+          <div style="display:flex;gap:18px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">
+            <span>In: <span class="v-blue">${(k.cost.inputTokens/1000).toFixed(1)}k</span></span>
+            <span>Out: <span class="v-green">${(k.cost.outputTokens/1000).toFixed(1)}k</span></span>
+          </div>
+        </div>`).join('')}
+      <div style="border-top:2px solid var(--line);padding-top:12px;margin-top:8px;font-size:12px;font-weight:800">
+        Total: <span class="v-blue">${(totalIn/1000).toFixed(1)}k in</span> + <span class="v-green">${(totalOut/1000).toFixed(1)}k out</span> = <span class="v-red">$${totalCost.toFixed(4)}</span>
+      </div>
+    </div>`;
+}
+
+// ── Logs ──
+function renderLogs(logs) {
+  const container = document.getElementById('logEntries');
+  if (!logs || logs.length === 0) {
+    container.innerHTML = '<div class="log-empty">No requests logged yet. Logs stream here as the proxy handles API calls.</div>';
+    return;
+  }
+  container.innerHTML = logs.map(l => {
+    const time = new Date(l.timestamp).toLocaleTimeString();
+    const statusClass = l.statusCode < 300 ? 's2xx' : l.statusCode < 500 ? 's4xx' : 's5xx';
+    return `<div class="log-entry">
+      <span class="log-time">${time}</span>
+      <span class="log-method">${esc(l.method)}</span>
+      <span class="log-path" title="${esc(l.path)}">${esc(l.path)}</span>
+      <span class="log-key" title="${esc(l.keyLabel)}">#${l.keyIndex + 1} ${esc(l.keyLabel)}</span>
+      <span class="log-status ${statusClass}">${l.statusCode}</span>
+      <span class="log-time-ms">${l.responseTimeMs}ms</span>
+      <span class="log-cost">$${(l.cost||0).toFixed(4)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Actions ──
+async function toggleKey(idx) {
+  const res = await api('POST', `/api/keys/${idx}/toggle`);
+  if (res.success) toast(`Key #${idx + 1} ${res.enabled ? 'enabled' : 'disabled'}`);
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+async function setWeight(idx, val) {
+  const res = await api('POST', `/api/keys/${idx}/weight`, { weight: parseInt(val) });
+  if (res.success) toast(`Key #${idx + 1} weight = ${val}`);
+  else toast(res.error || 'Failed', 'error');
+}
+async function setBudget(idx) {
+  const amt = document.getElementById(`budget-amt-${idx}`).value;
+  const hrs = document.getElementById(`budget-hrs-${idx}`).value;
+  const res = await api('POST', `/api/keys/${idx}/budget`, { amount: amt ? parseFloat(amt) : null, hours: hrs ? parseInt(hrs) : null });
+  if (res.success) toast(`Key #${idx + 1} budget updated`);
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+async function setCooldown(idx) {
+  const secs = document.getElementById(`cooldown-${idx}`).value;
+  if (secs === '') { toast('Enter cooldown seconds', 'error'); return; }
+  const res = await api('POST', `/api/keys/${idx}/cooldown`, { seconds: parseInt(secs), setDefault: true });
+  if (res.success) toast(`Key #${idx + 1} cooldown set to ${secs}s`);
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+async function clearCooldown(idx) {
+  const res = await api('POST', `/api/keys/${idx}/cooldown`, { clear: true });
+  if (res.success) toast(`Key #${idx + 1} cooldown cleared`);
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+async function checkBalance(idx) {
+  toast(`Checking balance for key #${idx + 1}…`);
+  const res = await api('POST', `/api/keys/${idx}/balance`);
+  if (res.success) toast(`Key #${idx + 1} balance: ${res.balance}`);
+  else toast(`Balance: ${res.error || 'unavailable'}`, 'error');
+  fetchStatus();
+}
+async function clearErrors(idx) {
+  const res = await api('POST', `/api/keys/${idx}/clear-errors`);
+  if (res.success) toast(`Key #${idx + 1} error log cleared`);
+  fetchStatus();
+}
+function toggleErrLog(idx) {
+  if (openErrLogs.has(idx)) openErrLogs.delete(idx); else openErrLogs.add(idx);
+  if (lastData) renderKeys(lastData.keys);
+}
+function filterLogsToKey(idx) {
+  const filter = document.getElementById('logKeyFilter');
+  filter.value = String(idx);
+  if (document.getElementById('logSection').classList.contains('hidden')) toggleSection('logSection');
+  document.getElementById('logSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  fetchLogs();
+}
+async function editProvider(idx) {
+  const k = lastData?.keys?.[idx] || {};
+  const baseUrl = prompt(`API URL (provider base) for "${k.label}"\nLeave blank to use default target:`, k.baseUrl || '');
+  if (baseUrl === null) return;
+  const provider = prompt('Provider name (optional):', k.provider || '');
+  if (provider === null) return;
+  const balanceUrl = prompt('Balance check URL (optional):', k.balanceUrl || '');
+  if (balanceUrl === null) return;
+  const res = await api('POST', `/api/keys/${idx}/provider`, { baseUrl, provider, balanceUrl });
+  if (res.success) toast(`Key #${idx + 1} provider updated`);
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+async function deleteKey(idx) {
+  const data = lastData?.keys?.[idx];
+  const ok = await confirmBox(`Remove key "${data?.label || '#' + (idx + 1)}"? This cannot be undone.`);
+  if (!ok) return;
+  const res = await api('DELETE', `/api/keys/${idx}`);
+  if (res.success) toast(res.message);
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+async function addKey() {
+  const label = document.getElementById('newLabel').value.trim();
+  const key = document.getElementById('newKey').value.trim();
+  const baseUrl = document.getElementById('newBaseUrl').value.trim();
+  const provider = document.getElementById('newProvider').value.trim();
+  const balanceUrl = document.getElementById('newBalanceUrl').value.trim();
+  const weight = parseInt(document.getElementById('newWeight').value) || 1;
+  const budgetAmount = document.getElementById('newBudgetAmount').value;
+  const budgetHours = document.getElementById('newBudgetHours').value;
+  const cooldownSeconds = document.getElementById('newCooldown').value;
+
+  if (!label || !key) { toast('Label and key are required', 'error'); return; }
+
+  const res = await api('POST', '/api/keys', {
+    label, key, baseUrl, provider, balanceUrl, weight,
+    budgetAmount: budgetAmount || null,
+    budgetHours: budgetHours || null,
+    cooldownSeconds: cooldownSeconds || null,
+  });
+  if (res.success) {
+    toast(res.message);
+    ['newLabel','newKey','newBaseUrl','newProvider','newBalanceUrl','newBudgetAmount','newCooldown'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('newWeight').value = '1';
+    fetchStatus();
+  } else {
+    toast(res.error || 'Failed', 'error');
+  }
+}
+function toggleKeyVis() {
+  const inp = document.getElementById('newKey');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+async function saveSettings() {
+  const host = document.getElementById('settingsHost').value.trim();
+  const strategy = document.getElementById('settingsStrategy').value;
+  const res = await api('POST', '/api/settings', { targetHost: host, strategy });
+  if (res.success) toast('Settings saved & applied ✓');
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+async function hotReload() {
+  const res = await api('POST', '/api/restart');
+  if (res.success) toast('Configuration reloaded ✓');
+  else toast(res.error || 'Failed', 'error');
+  fetchStatus();
+}
+
+// ── Fetch & update ──
+async function fetchStatus() {
+  try {
+    const data = await api('GET', '/api/status');
+    lastData = data;
+    document.getElementById('statusDot').classList.remove('offline');
+    document.getElementById('connStatus').textContent = 'Connected';
+    document.getElementById('uptime').textContent = data.uptimeFormatted;
+    document.getElementById('targetApi').textContent = data.targetApi;
+    document.getElementById('strategyLabel').textContent = data.strategy;
+
+    document.getElementById('totalReqs').textContent = data.totalRequests.toLocaleString();
+    const activeCount = data.keys.filter(k => k.enabled).length;
+    document.getElementById('activeKeys').textContent = `${activeCount} / ${data.keys.length}`;
+    document.getElementById('keysDetail').textContent = `${data.keys.filter(k => k.rateLimitedRemaining > 0).length} on cooldown`;
+    document.getElementById('keyCount').textContent = data.keys.length;
+
+    document.getElementById('rpm').textContent = calcRPM(data.totalRequests);
+
+    const totalCost = data.keys.reduce((s, k) => s + k.cost.totalCost, 0);
+    const totalIn = data.keys.reduce((s, k) => s + k.cost.inputTokens, 0);
+    const totalOut = data.keys.reduce((s, k) => s + k.cost.outputTokens, 0);
+    document.getElementById('totalCost').textContent = '$' + totalCost.toFixed(4);
+    document.getElementById('totalTokens').textContent = `${((totalIn + totalOut) / 1000).toFixed(1)}k tokens`;
+
+    updateSparkline(data.totalRequests);
+    renderKeys(data.keys);
+    renderCosts(data.keys);
+
+    document.getElementById('settingsHost').value = data.targetApi.replace(/^https?:\/\//, '');
+    document.getElementById('settingsStrategy').value = data.strategy;
+
+    const filter = document.getElementById('logKeyFilter');
+    const currentVal = filter.value;
+    filter.innerHTML = '<option value="">All Keys</option>' +
+      data.keys.map((k, i) => `<option value="${i}">#${i + 1} ${esc(k.label)}</option>`).join('');
+    filter.value = currentVal;
+  } catch (e) {
+    document.getElementById('statusDot').classList.add('offline');
+    document.getElementById('connStatus').textContent = 'Disconnected';
+  }
+}
+
+async function fetchLogs() {
+  try {
+    const keyFilter = document.getElementById('logKeyFilter').value;
+    let url = '/api/logs?limit=80';
+    if (keyFilter !== '') url += `&key=${keyFilter}`;
+    const data = await api('GET', url);
+    document.getElementById('logCount').textContent = data.logs?.length || 0;
+    renderLogs(data.logs);
+  } catch (e) { /* silent */ }
+}
+
+setInterval(fetchStatus, 2000);
+setInterval(fetchLogs, 5000);
+fetchStatus();
+fetchLogs();
+</script>
+</body>
+</html>

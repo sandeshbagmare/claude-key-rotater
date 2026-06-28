@@ -1,0 +1,26 @@
+{
+  "proxyPort": 4891,
+  "dashboardPort": 4892,
+  "targetHost": "capi.aerolink.lat",
+  "targetProtocol": "https:",
+  "strategy": "round-robin",
+  "keys": [
+    {
+      "label": "you@example.com",
+      "key": "REPLACE_WITH_YOUR_API_KEY",
+      "enabled": true,
+      "weight": 1,
+      "budget": { "amount": 10, "hours": 5 }
+    },
+    {
+      "label": "another-provider-account",
+      "key": "REPLACE_WITH_YOUR_API_KEY",
+      "enabled": true,
+      "weight": 1,
+      "baseUrl": "https://api.your-other-provider.com",
+      "provider": "OtherProvider",
+      "balanceUrl": "https://api.your-other-provider.com/v1/balance",
+      "cooldownSeconds": 60
+    }
+  ]
+}
