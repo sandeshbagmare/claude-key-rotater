@@ -113,6 +113,24 @@ function newKeyStats(label) {
   };
 }
 
+// Backfill any missing/invalid fields on loaded key stats so older state
+// files (or partially-written ones) can't break selection logic.
+// A `undefined` budgetUsed, for example, makes `budgetUsed < amount` false
+// and silently benches every key.
+function normalizeKeyStats() {
+  const numeric = ['totalRequests', 'totalErrors', 'inputTokens', 'outputTokens', 'totalCost', 'budgetUsed'];
+  state.keyStats = (state.keyStats || []).map((st) => {
+    const s = st || {};
+    for (const f of numeric) {
+      if (typeof s[f] !== 'number' || isNaN(s[f])) s[f] = 0;
+    }
+    if (!Array.isArray(s.errorLog)) s.errorLog = [];
+    if (s.rateLimitedUntil === undefined) s.rateLimitedUntil = null;
+    if (s.balance === undefined) s.balance = null;
+    return s;
+  });
+}
+
 function logKeyError(keyIndex, statusCode, message) {
   const stats = state.keyStats[keyIndex];
   if (!stats) return;
@@ -177,6 +195,12 @@ function checkBudget(keyIndex) {
   const now = Date.now();
   const budgetHoursMs = (keyConfig.budget.hours || 24) * 3600 * 1000;
 
+  // Guard against missing/undefined counters from older state files.
+  // (undefined < amount === false, which would wrongly skip every key.)
+  if (typeof stats.budgetUsed !== 'number' || isNaN(stats.budgetUsed)) {
+    stats.budgetUsed = 0;
+  }
+
   // Reset budget if the window has expired
   if (stats.budgetResetAt && now >= stats.budgetResetAt) {
     stats.budgetUsed = 0;
@@ -194,8 +218,8 @@ function checkBudget(keyIndex) {
 
 function addCost(keyIndex, cost) {
   const stats = state.keyStats[keyIndex];
-  stats.totalCost += cost;
-  stats.budgetUsed += cost;
+  stats.totalCost = (stats.totalCost || 0) + cost;
+  stats.budgetUsed = (stats.budgetUsed || 0) + cost;
 }
 
 // ─── Key Selection Strategies ────────────────────────────────────────────────
@@ -865,6 +889,7 @@ async function handleApiRequest(req, res) {
       console.log('[CONFIG] Hot-reload triggered via API');
       config = loadConfig();
       initKeyStats();
+      normalizeKeyStats();
       return sendJSON(res, 200, { success: true, message: 'Configuration reloaded' });
     }
 
@@ -1068,6 +1093,7 @@ function serveDashboard(res) {
 
 loadState();
 initKeyStats();
+normalizeKeyStats();
 
 // Merge existing state stats with freshly loaded config
 for (let i = 0; i < config.keys.length; i++) {
